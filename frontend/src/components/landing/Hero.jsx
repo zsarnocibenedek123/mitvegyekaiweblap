@@ -3,17 +3,7 @@ import { useRef } from 'react';
 import { ArrowRight, Zap, TrendingUp, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
-const FloatingCard = ({ children, className, delay = 0 }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 30 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}
-    className={className}
-  >
-    {children}
-  </motion.div>
-);
+import { HeroVisual3D } from './HeroVisual3D';
 
 export const Hero = ({ onDemoClick }) => {
   const ref = useRef(null);
@@ -114,89 +104,9 @@ export const Hero = ({ onDemoClick }) => {
             </motion.div>
           </motion.div>
 
-          {/* Right: Floating Cards */}
+          {/* Right: 3D Sneaker Scanner Visual */}
           <div className="relative hidden lg:block h-[480px]">
-            <FloatingCard
-              delay={0.4}
-              className="absolute top-0 right-8 glass-card rounded-2xl p-5 shadow-lg floating-animation"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#E0EFFF] flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-[#0052CC]" />
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 font-medium">Termék felismerve</p>
-                  <p className="text-sm font-bold text-[#0A1128]">Nike Air Max 90</p>
-                </div>
-              </div>
-            </FloatingCard>
-
-            <FloatingCard
-              delay={0.6}
-              className="absolute top-28 left-4 glass-card rounded-2xl p-5 shadow-lg floating-animation-delayed"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 font-medium">AI Matching...</p>
-                  <div className="mt-1 h-1.5 w-32 bg-slate-100 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: '87%' }}
-                      transition={{ duration: 2, delay: 1, ease: 'easeOut' }}
-                      className="h-full bg-[#0052CC] rounded-full"
-                    />
-                  </div>
-                </div>
-              </div>
-            </FloatingCard>
-
-            <FloatingCard
-              delay={0.8}
-              className="absolute top-56 right-0 glass-card rounded-2xl p-5 shadow-lg floating-animation-slow"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#0052CC] flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">+34%</span>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 font-medium">Konverzió növekedés</p>
-                  <p className="text-sm font-bold text-green-600">Utolsó 30 nap</p>
-                </div>
-              </div>
-            </FloatingCard>
-
-            <FloatingCard
-              delay={1.0}
-              className="absolute bottom-16 left-12 glass-card rounded-2xl p-5 shadow-lg floating-animation"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                <p className="text-sm font-semibold text-[#0A1128]">12 webshop aktív</p>
-              </div>
-              <div className="mt-2 flex -space-x-2">
-                {[0,1,2,3].map((i) => (
-                  <div key={i} className="w-7 h-7 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center">
-                    <span className="text-[10px] font-bold text-slate-500">{['A','B','C','D'][i]}</span>
-                  </div>
-                ))}
-                <div className="w-7 h-7 rounded-full border-2 border-white bg-[#0052CC] flex items-center justify-center">
-                  <span className="text-[10px] font-bold text-white">+8</span>
-                </div>
-              </div>
-            </FloatingCard>
-
-            {/* Dotted grid background */}
-            <svg className="absolute inset-0 w-full h-full opacity-[0.07]" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id="dotGrid" width="24" height="24" patternUnits="userSpaceOnUse">
-                  <circle cx="1" cy="1" r="1" fill="#0052CC" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#dotGrid)" />
-            </svg>
+            <HeroVisual3D />
           </div>
         </div>
       </div>
