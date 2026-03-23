@@ -1,18 +1,15 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-const SHOE_IMG_URL = '/sneaker_clean.png';
-
 export const HeroVisual3D = () => {
   const canvasRef = useRef(null);
-  const scanY = useRef(0);
-  const dir = useRef(1);
   const frameRef = useRef(null);
+  const timeRef = useRef(0);
   const [hudVisible, setHudVisible] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setHudVisible(true), 400);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setHudVisible(true), 600);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -20,123 +17,236 @@ export const HeroVisual3D = () => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 2;
-    const W = 580;
-    const H = 460;
+    const W = 540;
+    const H = 480;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     canvas.style.width = '100%';
     canvas.style.height = '100%';
     ctx.scale(dpr, dpr);
 
-    // Node positions
-    const nodes = [
-      { x: 65, y: 50 }, { x: 480, y: 65 }, { x: 85, y: 360 },
-      { x: 460, y: 340 }, { x: 260, y: 30 }, { x: 40, y: 210 },
-      { x: 530, y: 210 }, { x: 160, y: 400 }, { x: 400, y: 400 },
-      { x: 370, y: 40 }, { x: 130, y: 60 }, { x: 500, y: 140 },
+    // Card definitions (4 glass panels, funnel: big->small)
+    const cards = [
+      { x: 70, y: 40, w: 340, h: 380, opacity: 0.35, label: 'Teljes katalógus', dots: 120, dotOrder: 0 },
+      { x: 115, y: 70, w: 290, h: 330, opacity: 0.45, label: 'Szemantikus szűrés', dots: 55, dotOrder: 1 },
+      { x: 155, y: 100, w: 240, h: 280, opacity: 0.55, label: 'Relevancia rangsor', dots: 18, dotOrder: 2 },
+      { x: 190, y: 130, w: 195, h: 230, opacity: 0.85, label: 'Tökéletes találat', dots: 1, dotOrder: 3 },
     ];
 
-    const conns = [];
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        const d = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y);
-        if (d < 220) conns.push([i, j]);
+    // Pre-generate dot positions for each card (seeded)
+    const cardDots = cards.map((card, ci) => {
+      const dots = [];
+      const seed = ci * 1000;
+      for (let i = 0; i < card.dots; i++) {
+        const px = pseudoRandom(seed + i * 3) * (card.w - 24) + 12;
+        const py = pseudoRandom(seed + i * 3 + 1) * (card.h - 40) + 28;
+        const size = 1.5 + pseudoRandom(seed + i * 3 + 2) * 2;
+        dots.push({ px, py, size, phase: pseudoRandom(seed + i * 7) * Math.PI * 2 });
       }
+      return dots;
+    });
+
+    function pseudoRandom(seed) {
+      let x = Math.sin(seed * 9301 + 49297) * 49297;
+      return x - Math.floor(x);
     }
 
-    // Scanner area matches the shoe image position
-    const scanLeft = 90;
-    const scanRight = 490;
-    const scanTop = 60;
-    const scanBottom = 400;
+    // Particles flowing between cards
+    const particles = [];
+    for (let i = 0; i < 20; i++) {
+      particles.push({
+        fromCard: Math.floor(i / 7),
+        t: Math.random(),
+        speed: 0.004 + Math.random() * 0.006,
+        x: 0, y: 0,
+        size: 1 + Math.random() * 1.5,
+        opacity: 0.3 + Math.random() * 0.4,
+      });
+    }
 
     const draw = () => {
+      timeRef.current += 0.016;
+      const t = timeRef.current;
       ctx.clearRect(0, 0, W, H);
 
-      // Subtle grid
-      ctx.strokeStyle = 'rgba(0, 82, 204, 0.03)';
-      ctx.lineWidth = 0.5;
-      for (let x = 0; x <= W; x += 35) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
-      }
-      for (let y = 0; y <= H; y += 35) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-      }
+      // Draw each card
+      cards.forEach((card, ci) => {
+        const floatY = Math.sin(t * 0.8 + ci * 0.7) * 4;
+        const cx = card.x;
+        const cy = card.y + floatY;
 
-      // Connections
-      ctx.strokeStyle = 'rgba(0, 82, 204, 0.06)';
-      ctx.lineWidth = 0.6;
-      conns.forEach(([a, b]) => {
+        // Card shadow
+        ctx.fillStyle = `rgba(0, 40, 120, ${0.03 + ci * 0.01})`;
         ctx.beginPath();
-        ctx.moveTo(nodes[a].x, nodes[a].y);
-        ctx.lineTo(nodes[b].x, nodes[b].y);
+        roundRect(ctx, cx + 4, cy + 6, card.w, card.h, 16);
+        ctx.fill();
+
+        // Glass card background
+        ctx.fillStyle = `rgba(255, 255, 255, ${card.opacity})`;
+        ctx.beginPath();
+        roundRect(ctx, cx, cy, card.w, card.h, 16);
+        ctx.fill();
+
+        // Glass border
+        ctx.strokeStyle = ci === 3
+          ? 'rgba(0, 82, 204, 0.35)'
+          : `rgba(0, 82, 204, ${0.06 + ci * 0.04})`;
+        ctx.lineWidth = ci === 3 ? 1.5 : 0.8;
+        ctx.beginPath();
+        roundRect(ctx, cx, cy, card.w, card.h, 16);
         ctx.stroke();
+
+        // Card label at top
+        ctx.fillStyle = ci === 3 ? 'rgba(0, 82, 204, 0.8)' : 'rgba(100, 116, 139, 0.5)';
+        ctx.font = `${ci === 3 ? '600' : '500'} 10px 'JetBrains Mono', monospace`;
+        ctx.textAlign = 'left';
+        ctx.fillText(card.label.toUpperCase(), cx + 14, cy + 18);
+
+        // Draw dots
+        const dots = cardDots[ci];
+        dots.forEach((dot, di) => {
+          const dx = cx + dot.px;
+          const dy = cy + dot.py;
+
+          if (ci === 3) {
+            // Final card: single glowing blue product
+            const pulse = Math.sin(t * 2) * 0.15 + 0.85;
+
+            // Outer glow
+            ctx.beginPath();
+            ctx.arc(cx + card.w / 2, cy + card.h / 2 + 10, 28, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 82, 204, ${0.08 * pulse})`;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(cx + card.w / 2, cy + card.h / 2 + 10, 18, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 82, 204, ${0.15 * pulse})`;
+            ctx.fill();
+
+            // Product silhouette (rounded rect)
+            const px = cx + card.w / 2 - 20;
+            const py2 = cy + card.h / 2 - 12;
+            ctx.fillStyle = `rgba(0, 82, 204, ${0.18 * pulse})`;
+            ctx.beginPath();
+            roundRect(ctx, px, py2, 40, 48, 8);
+            ctx.fill();
+            ctx.strokeStyle = `rgba(0, 82, 204, ${0.5 * pulse})`;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            roundRect(ctx, px, py2, 40, 48, 8);
+            ctx.stroke();
+
+            // Checkmark
+            ctx.save();
+            ctx.strokeStyle = `rgba(0, 82, 204, ${0.9 * pulse})`;
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(cx + card.w / 2 - 7, cy + card.h / 2 + 12);
+            ctx.lineTo(cx + card.w / 2 - 1, cy + card.h / 2 + 18);
+            ctx.lineTo(cx + card.w / 2 + 9, cy + card.h / 2 + 4);
+            ctx.stroke();
+            ctx.restore();
+          } else {
+            // Other cards: scattered dots
+            const wobble = Math.sin(t * 1.2 + dot.phase) * (ci === 0 ? 3 : ci === 1 ? 1.5 : 0.5);
+            const dotAlpha = ci === 0 ? 0.15 : ci === 1 ? 0.25 : 0.4;
+            const dotColor = ci === 2 ? `rgba(0, 82, 204, ${dotAlpha})` : `rgba(148, 163, 184, ${dotAlpha})`;
+
+            ctx.beginPath();
+            ctx.arc(dx + wobble, dy + wobble * 0.5, dot.size, 0, Math.PI * 2);
+            ctx.fillStyle = dotColor;
+            ctx.fill();
+          }
+        });
+
+        // Step number badge
+        if (ci < 3) {
+          const badgeX = cx + card.w - 28;
+          const badgeY = cy + 10;
+          ctx.fillStyle = 'rgba(0, 82, 204, 0.06)';
+          ctx.beginPath();
+          ctx.arc(badgeX, badgeY, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = 'rgba(0, 82, 204, 0.35)';
+          ctx.font = "bold 9px 'JetBrains Mono', monospace";
+          ctx.textAlign = 'center';
+          ctx.fillText(`${ci + 1}`, badgeX, badgeY + 3);
+        }
       });
 
-      // Nodes
-      nodes.forEach((n) => {
+      // Animate particles flowing between cards (funnel effect)
+      particles.forEach(p => {
+        p.t += p.speed;
+        if (p.t > 1) { p.t = 0; p.fromCard = (p.fromCard + 1) % 3; }
+
+        const fromCard = cards[p.fromCard];
+        const toCard = cards[p.fromCard + 1];
+        if (!toCard) return;
+
+        const floatFrom = Math.sin(t * 0.8 + p.fromCard * 0.7) * 4;
+        const floatTo = Math.sin(t * 0.8 + (p.fromCard + 1) * 0.7) * 4;
+
+        const x1 = fromCard.x + fromCard.w / 2;
+        const y1 = fromCard.y + floatFrom + fromCard.h * 0.7;
+        const x2 = toCard.x + toCard.w / 2;
+        const y2 = toCard.y + floatTo + toCard.h * 0.3;
+
+        p.x = x1 + (x2 - x1) * p.t;
+        p.y = y1 + (y2 - y1) * p.t + Math.sin(p.t * Math.PI) * -15;
+
         ctx.beginPath();
-        ctx.arc(n.x, n.y, 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 82, 204, 0.25)';
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 82, 204, ${p.opacity * (1 - p.t * 0.5)})`;
         ctx.fill();
+
+        // Trail
         ctx.beginPath();
-        ctx.arc(n.x, n.y, 7, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 82, 204, 0.04)';
+        ctx.arc(p.x, p.y, p.size * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 82, 204, ${p.opacity * 0.08})`;
         ctx.fill();
       });
 
-      // Digital mesh overlay on shoe area
-      ctx.strokeStyle = 'rgba(0, 82, 204, 0.035)';
-      ctx.lineWidth = 0.5;
-      for (let x = scanLeft; x < scanRight; x += 24) {
-        ctx.beginPath(); ctx.moveTo(x, scanTop); ctx.lineTo(x, scanBottom); ctx.stroke();
+      // Funnel arrows between cards
+      for (let i = 0; i < 3; i++) {
+        const from = cards[i];
+        const to = cards[i + 1];
+        const floatF = Math.sin(t * 0.8 + i * 0.7) * 4;
+        const floatT = Math.sin(t * 0.8 + (i + 1) * 0.7) * 4;
+        const ax = (from.x + from.w / 2 + to.x + to.w / 2) / 2;
+        const ay = from.y + floatF + from.h + ((to.y + floatT - (from.y + floatF + from.h)) / 2);
+
+        // Small downward arrow
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0, 82, 204, 0.15)';
+        ctx.lineWidth = 1.2;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(ax, ay - 4);
+        ctx.lineTo(ax, ay + 4);
+        ctx.moveTo(ax - 3, ay + 1);
+        ctx.lineTo(ax, ay + 4);
+        ctx.lineTo(ax + 3, ay + 1);
+        ctx.stroke();
+        ctx.restore();
       }
-      for (let y = scanTop; y < scanBottom; y += 20) {
-        ctx.beginPath(); ctx.moveTo(scanLeft, y); ctx.lineTo(scanRight, y); ctx.stroke();
-      }
-
-      // ── Scanner Line ──
-      scanY.current += dir.current * 0.7;
-      if (scanY.current > (scanBottom - scanTop) - 20) dir.current = -1;
-      if (scanY.current < 10) dir.current = 1;
-      const sy = scanTop + scanY.current;
-
-      // Scanner glow
-      const gGrad = ctx.createLinearGradient(0, sy - 22, 0, sy + 22);
-      gGrad.addColorStop(0, 'rgba(0, 82, 204, 0)');
-      gGrad.addColorStop(0.35, 'rgba(0, 82, 204, 0.06)');
-      gGrad.addColorStop(0.5, 'rgba(0, 82, 204, 0.14)');
-      gGrad.addColorStop(0.65, 'rgba(0, 82, 204, 0.06)');
-      gGrad.addColorStop(1, 'rgba(0, 82, 204, 0)');
-      ctx.fillStyle = gGrad;
-      ctx.fillRect(scanLeft - 30, sy - 22, (scanRight - scanLeft) + 60, 44);
-
-      // Main laser
-      ctx.save();
-      ctx.shadowColor = '#0052CC';
-      ctx.shadowBlur = 12;
-      ctx.strokeStyle = '#0052CC';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(scanLeft - 30, sy);
-      ctx.lineTo(scanRight + 30, sy);
-      ctx.stroke();
-      ctx.restore();
-
-      // Laser endpoints
-      [scanLeft - 30, scanRight + 30].forEach((ex) => {
-        ctx.beginPath();
-        ctx.arc(ex, sy, 3.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#0052CC';
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(ex, sy, 7, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 82, 204, 0.15)';
-        ctx.fill();
-      });
 
       frameRef.current = requestAnimationFrame(draw);
     };
+
+    function roundRect(ctx2, x, y, w, h, r) {
+      ctx2.moveTo(x + r, y);
+      ctx2.lineTo(x + w - r, y);
+      ctx2.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx2.lineTo(x + w, y + h - r);
+      ctx2.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx2.lineTo(x + r, y + h);
+      ctx2.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx2.lineTo(x, y + r);
+      ctx2.quadraticCurveTo(x, y, x + r, y);
+      ctx2.closePath();
+    }
 
     draw();
     return () => {
@@ -145,100 +255,74 @@ export const HeroVisual3D = () => {
   }, []);
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center" data-testid="hero-3d-visual">
-      {/* Sneaker image behind canvas */}
-      <motion.img
-        src={SHOE_IMG_URL}
-        alt="Sneaker 3D scan"
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="absolute inset-0 w-[70%] h-[75%] object-contain m-auto pointer-events-none select-none"
-        draggable={false}
-        style={{ zIndex: 1 }}
-      />
-
-      {/* Canvas overlay with scanner, grid, nodes */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 w-full h-full"
-        style={{ zIndex: 2 }}
-      />
+    <div className="relative w-full h-full" data-testid="hero-3d-visual">
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
 
       {/* HUD Labels */}
       <motion.div
-        initial={{ opacity: 0, x: -15 }}
+        initial={{ opacity: 0, x: -10 }}
         animate={hudVisible ? { opacity: 1, x: 0 } : {}}
-        transition={{ duration: 0.5, delay: 0.6 }}
-        className="absolute top-[8%] left-[3%]"
+        transition={{ duration: 0.4, delay: 0.8 }}
+        className="absolute top-[6%] left-[4%]"
         style={{ zIndex: 3 }}
-        data-testid="hud-object-recognized"
+        data-testid="hud-catalog-label"
       >
-        <div className="hud-label hud-label-recognized">
-          <span className="hud-dot hud-dot-green" />
-          OBJECT RECOGNIZED
+        <div className="hud-label" style={{ background: 'rgba(255,255,255,0.85)', border: '1px solid rgba(148,163,184,0.2)', color: '#64748B', fontSize: '9px' }}>
+          12,847 TERMÉK
         </div>
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, x: 15 }}
+        initial={{ opacity: 0, x: 10 }}
         animate={hudVisible ? { opacity: 1, x: 0 } : {}}
-        transition={{ duration: 0.5, delay: 1.0 }}
-        className="absolute top-[22%] right-[1%]"
+        transition={{ duration: 0.4, delay: 1.2 }}
+        className="absolute top-[18%] right-[2%]"
         style={{ zIndex: 3 }}
-        data-testid="hud-analyzing"
+        data-testid="hud-semantic-label"
       >
         <div className="hud-label hud-label-analyzing">
           <span className="hud-dot hud-dot-blue" />
-          ANALYZING MESH...
+          SZEMANTIKUS SZŰRÉS
         </div>
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={hudVisible ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.5, delay: 1.4 }}
-        className="absolute bottom-[10%] left-[25%]"
+        initial={{ opacity: 0, x: 10 }}
+        animate={hudVisible ? { opacity: 1, x: 0 } : {}}
+        transition={{ duration: 0.4, delay: 1.6 }}
+        className="absolute top-[42%] right-[0%]"
         style={{ zIndex: 3 }}
-        data-testid="hud-match-found"
+        data-testid="hud-ranking-label"
+      >
+        <div className="hud-label hud-label-recognized">
+          <span className="hud-dot hud-dot-green" />
+          RELEVANCIA RANGSOROLVA
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={hudVisible ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.4, delay: 2.0 }}
+        className="absolute bottom-[14%] left-[28%]"
+        style={{ zIndex: 3 }}
+        data-testid="hud-match-label"
       >
         <div className="hud-label hud-label-match">
           <span className="hud-dot hud-dot-green" />
-          MATCH FOUND: 99.8%
+          TÖKÉLETES TALÁLAT: 99.8%
         </div>
       </motion.div>
 
       <motion.div
         initial={{ opacity: 0 }}
         animate={hudVisible ? { opacity: 1 } : {}}
-        transition={{ duration: 0.5, delay: 1.8 }}
-        className="absolute top-[4%] right-[10%]"
+        transition={{ duration: 0.4, delay: 2.4 }}
+        className="absolute top-[4%] right-[15%]"
         style={{ zIndex: 3 }}
       >
-        <div className="hud-label" style={{
-          background: 'rgba(255,255,255,0.8)',
-          border: '1px solid rgba(0,82,204,0.12)',
-          color: '#94A3B8',
-          fontSize: '9px',
-        }}>
-          EMBEDDING VECTORS: 768D
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={hudVisible ? { opacity: 1 } : {}}
-        transition={{ duration: 0.5, delay: 2.2 }}
-        className="absolute bottom-[25%] right-[3%]"
-        style={{ zIndex: 3 }}
-      >
-        <div className="hud-label" style={{
-          background: 'rgba(255,255,255,0.8)',
-          border: '1px solid rgba(0,82,204,0.12)',
-          color: '#94A3B8',
-          fontSize: '9px',
-        }}>
-          SIMILARITY: COSINE
+        <div className="hud-label" style={{ background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(0,82,204,0.1)', color: '#94A3B8', fontSize: '9px' }}>
+          EMBEDDING: 768D
         </div>
       </motion.div>
     </div>

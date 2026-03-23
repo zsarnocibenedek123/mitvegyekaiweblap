@@ -104,8 +104,8 @@ export const Hero = ({ onDemoClick }) => {
             </motion.div>
           </motion.div>
 
-          {/* Right: 3D Sneaker Scanner Visual */}
-          <div className="relative hidden lg:block h-[480px]">
+          {/* Right: AI Neural Network Visual */}
+          <div className="relative hidden lg:block h-[520px] overflow-hidden">
             <HeroVisual3D />
           </div>
         </div>
