@@ -31,7 +31,7 @@ const steps = [
     icon: Brain,
     step: '04',
     title: 'LLM újrarangsorolás',
-    desc: 'AI-generált indoklás minden termékhez. A vásárló megérti, miért pont azt kapja.',
+    desc: 'AI-generált indoklás minden termékhez.',
     color: '#0052CC',
     bgColor: '#E0EFFF',
   },
@@ -43,7 +43,7 @@ const StepCard = ({ step, index, isInView }) => {
     <motion.div
       initial={{ opacity: 0, y: 40 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, delay: index * 0.15 }}
+      transition={{ duration: 1.0, delay: index * 0.3, ease: [0.22, 1, 0.36, 1] }}
       className="relative group"
       data-testid={`pipeline-step-${index + 1}`}
     >
@@ -69,13 +69,13 @@ const StepCard = ({ step, index, isInView }) => {
           <motion.div
             initial={{ scaleX: 0 }}
             animate={isInView ? { scaleX: 1 } : {}}
-            transition={{ duration: 0.4, delay: index * 0.15 + 0.3 }}
+            transition={{ duration: 0.6, delay: index * 0.3 + 0.5 }}
             className="h-0.5 bg-gradient-to-r from-[#0052CC] to-[#93C5FD] origin-left"
           />
           <motion.div
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
-            transition={{ duration: 0.3, delay: index * 0.15 + 0.5 }}
+            transition={{ duration: 0.4, delay: index * 0.3 + 0.8 }}
             className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#0052CC]"
           />
         </div>
@@ -86,7 +86,7 @@ const StepCard = ({ step, index, isInView }) => {
 
 export const Pipeline = () => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const isInView = useInView(ref, { once: true, margin: '-200px' });
 
   return (
     <section id="pipeline" className="py-24 md:py-32 bg-[#F8FAFC]" data-testid="pipeline-section">
