@@ -1,12 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-/* ── High-detail sneaker SVG path ── */
-const SHOE_PATH = "M 30 95 Q 20 90 18 80 Q 16 68 25 58 Q 32 50 48 46 L 80 40 Q 100 36 130 34 L 180 32 Q 210 31 240 34 Q 270 38 290 46 L 310 56 Q 324 65 328 78 Q 330 88 324 95 Q 318 102 305 105 L 290 108 Q 270 112 240 114 L 200 116 Q 160 117 120 115 L 80 112 Q 50 108 38 100 Z";
-
-const SOLE_PATH = "M 22 92 Q 18 96 20 102 Q 22 108 30 110 L 60 114 Q 100 118 160 120 Q 220 120 270 116 L 300 112 Q 318 108 325 102 Q 330 96 326 92";
-
-const MIDSOLE_PATH = "M 24 92 Q 20 96 22 100 Q 24 104 32 106 L 60 110 Q 100 114 160 115 Q 220 115 270 112 L 298 108 Q 316 104 322 100 Q 326 96 324 92";
+const SHOE_IMG_URL = '/sneaker_clean.png';
 
 export const HeroVisual3D = () => {
   const canvasRef = useRef(null);
@@ -29,8 +24,8 @@ export const HeroVisual3D = () => {
     const H = 460;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
     ctx.scale(dpr, dpr);
 
     // Node positions
@@ -48,6 +43,12 @@ export const HeroVisual3D = () => {
         if (d < 220) conns.push([i, j]);
       }
     }
+
+    // Scanner area matches the shoe image position
+    const scanLeft = 90;
+    const scanRight = 490;
+    const scanTop = 60;
+    const scanBottom = 400;
 
     const draw = () => {
       ctx.clearRect(0, 0, W, H);
@@ -84,114 +85,55 @@ export const HeroVisual3D = () => {
         ctx.fill();
       });
 
-      // ── SNEAKER ──
-      ctx.save();
-      ctx.translate(130, 120);
-      ctx.scale(1.55, 1.55);
-
-      // Drop shadow
-      ctx.save();
-      ctx.translate(3, 8);
-      ctx.fillStyle = 'rgba(0, 20, 60, 0.06)';
-      ctx.fill(new Path2D(SHOE_PATH));
-      ctx.restore();
-
-      // Sole shadow
-      ctx.save();
-      ctx.translate(2, 6);
-      ctx.fillStyle = 'rgba(0, 20, 60, 0.04)';
-      ctx.fill(new Path2D(SOLE_PATH));
-      ctx.restore();
-
-      // Midsole
-      ctx.fillStyle = '#D8DDE8';
-      ctx.fill(new Path2D(MIDSOLE_PATH));
-      ctx.strokeStyle = 'rgba(0, 82, 204, 0.08)';
+      // Digital mesh overlay on shoe area
+      ctx.strokeStyle = 'rgba(0, 82, 204, 0.035)';
       ctx.lineWidth = 0.5;
-      ctx.stroke(new Path2D(MIDSOLE_PATH));
-
-      // Main shoe body
-      const shoeGrad = ctx.createLinearGradient(30, 30, 330, 120);
-      shoeGrad.addColorStop(0, '#ECEEF4');
-      shoeGrad.addColorStop(0.5, '#E4E7F0');
-      shoeGrad.addColorStop(1, '#DDE0EB');
-      ctx.fillStyle = shoeGrad;
-      ctx.fill(new Path2D(SHOE_PATH));
-
-      // Outline
-      ctx.strokeStyle = 'rgba(0, 82, 204, 0.1)';
-      ctx.lineWidth = 1;
-      ctx.stroke(new Path2D(SHOE_PATH));
-
-      // Digital mesh overlay on shoe
-      ctx.save();
-      ctx.clip(new Path2D(SHOE_PATH));
-      ctx.strokeStyle = 'rgba(0, 82, 204, 0.05)';
-      ctx.lineWidth = 0.5;
-      for (let x = 15; x < 340; x += 18) {
-        ctx.beginPath(); ctx.moveTo(x, 25); ctx.lineTo(x, 125); ctx.stroke();
+      for (let x = scanLeft; x < scanRight; x += 24) {
+        ctx.beginPath(); ctx.moveTo(x, scanTop); ctx.lineTo(x, scanBottom); ctx.stroke();
       }
-      for (let y = 25; y < 125; y += 14) {
-        ctx.beginPath(); ctx.moveTo(15, y); ctx.lineTo(340, y); ctx.stroke();
+      for (let y = scanTop; y < scanBottom; y += 20) {
+        ctx.beginPath(); ctx.moveTo(scanLeft, y); ctx.lineTo(scanRight, y); ctx.stroke();
       }
-      ctx.restore();
-
-      // Shoe detail lines
-      ctx.strokeStyle = 'rgba(0, 82, 204, 0.06)';
-      ctx.lineWidth = 0.8;
-      // Swoosh-like accent
-      ctx.beginPath();
-      ctx.moveTo(80, 85);
-      ctx.quadraticCurveTo(160, 50, 260, 65);
-      ctx.stroke();
-
-      // Toe accent
-      ctx.beginPath();
-      ctx.moveTo(50, 70);
-      ctx.quadraticCurveTo(65, 55, 90, 50);
-      ctx.stroke();
 
       // ── Scanner Line ──
       scanY.current += dir.current * 0.7;
-      if (scanY.current > 80) dir.current = -1;
-      if (scanY.current < -15) dir.current = 1;
-      const sy = 60 + scanY.current;
+      if (scanY.current > (scanBottom - scanTop) - 20) dir.current = -1;
+      if (scanY.current < 10) dir.current = 1;
+      const sy = scanTop + scanY.current;
 
       // Scanner glow
-      const gGrad = ctx.createLinearGradient(0, sy - 18, 0, sy + 18);
+      const gGrad = ctx.createLinearGradient(0, sy - 22, 0, sy + 22);
       gGrad.addColorStop(0, 'rgba(0, 82, 204, 0)');
-      gGrad.addColorStop(0.35, 'rgba(0, 82, 204, 0.07)');
-      gGrad.addColorStop(0.5, 'rgba(0, 82, 204, 0.15)');
-      gGrad.addColorStop(0.65, 'rgba(0, 82, 204, 0.07)');
+      gGrad.addColorStop(0.35, 'rgba(0, 82, 204, 0.06)');
+      gGrad.addColorStop(0.5, 'rgba(0, 82, 204, 0.14)');
+      gGrad.addColorStop(0.65, 'rgba(0, 82, 204, 0.06)');
       gGrad.addColorStop(1, 'rgba(0, 82, 204, 0)');
       ctx.fillStyle = gGrad;
-      ctx.fillRect(10, sy - 18, 330, 36);
+      ctx.fillRect(scanLeft - 30, sy - 22, (scanRight - scanLeft) + 60, 44);
 
       // Main laser
       ctx.save();
       ctx.shadowColor = '#0052CC';
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 12;
       ctx.strokeStyle = '#0052CC';
-      ctx.lineWidth = 1.8;
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(12, sy);
-      ctx.lineTo(330, sy);
+      ctx.moveTo(scanLeft - 30, sy);
+      ctx.lineTo(scanRight + 30, sy);
       ctx.stroke();
       ctx.restore();
 
       // Laser endpoints
-      [12, 330].forEach((ex) => {
+      [scanLeft - 30, scanRight + 30].forEach((ex) => {
         ctx.beginPath();
-        ctx.arc(ex, sy, 3, 0, Math.PI * 2);
+        ctx.arc(ex, sy, 3.5, 0, Math.PI * 2);
         ctx.fillStyle = '#0052CC';
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(ex, sy, 6, 0, Math.PI * 2);
+        ctx.arc(ex, sy, 7, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(0, 82, 204, 0.15)';
         ctx.fill();
       });
-
-      ctx.restore();
 
       frameRef.current = requestAnimationFrame(draw);
     };
@@ -204,9 +146,23 @@ export const HeroVisual3D = () => {
 
   return (
     <div className="relative w-full h-full flex items-center justify-center" data-testid="hero-3d-visual">
+      {/* Sneaker image behind canvas */}
+      <motion.img
+        src={SHOE_IMG_URL}
+        alt="Sneaker 3D scan"
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute inset-0 w-[70%] h-[75%] object-contain m-auto pointer-events-none select-none"
+        draggable={false}
+        style={{ zIndex: 1 }}
+      />
+
+      {/* Canvas overlay with scanner, grid, nodes */}
       <canvas
         ref={canvasRef}
-        className="max-w-full max-h-full"
+        className="absolute inset-0 w-full h-full"
+        style={{ zIndex: 2 }}
       />
 
       {/* HUD Labels */}
@@ -214,7 +170,8 @@ export const HeroVisual3D = () => {
         initial={{ opacity: 0, x: -15 }}
         animate={hudVisible ? { opacity: 1, x: 0 } : {}}
         transition={{ duration: 0.5, delay: 0.6 }}
-        className="absolute top-[10%] left-[8%]"
+        className="absolute top-[8%] left-[3%]"
+        style={{ zIndex: 3 }}
         data-testid="hud-object-recognized"
       >
         <div className="hud-label hud-label-recognized">
@@ -227,7 +184,8 @@ export const HeroVisual3D = () => {
         initial={{ opacity: 0, x: 15 }}
         animate={hudVisible ? { opacity: 1, x: 0 } : {}}
         transition={{ duration: 0.5, delay: 1.0 }}
-        className="absolute top-[28%] right-[2%]"
+        className="absolute top-[22%] right-[1%]"
+        style={{ zIndex: 3 }}
         data-testid="hud-analyzing"
       >
         <div className="hud-label hud-label-analyzing">
@@ -240,7 +198,8 @@ export const HeroVisual3D = () => {
         initial={{ opacity: 0, y: 10 }}
         animate={hudVisible ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.5, delay: 1.4 }}
-        className="absolute bottom-[18%] left-[30%]"
+        className="absolute bottom-[10%] left-[25%]"
+        style={{ zIndex: 3 }}
         data-testid="hud-match-found"
       >
         <div className="hud-label hud-label-match">
@@ -253,7 +212,8 @@ export const HeroVisual3D = () => {
         initial={{ opacity: 0 }}
         animate={hudVisible ? { opacity: 1 } : {}}
         transition={{ duration: 0.5, delay: 1.8 }}
-        className="absolute top-[6%] right-[15%]"
+        className="absolute top-[4%] right-[10%]"
+        style={{ zIndex: 3 }}
       >
         <div className="hud-label" style={{
           background: 'rgba(255,255,255,0.8)',
@@ -269,7 +229,8 @@ export const HeroVisual3D = () => {
         initial={{ opacity: 0 }}
         animate={hudVisible ? { opacity: 1 } : {}}
         transition={{ duration: 0.5, delay: 2.2 }}
-        className="absolute bottom-[32%] right-[6%]"
+        className="absolute bottom-[25%] right-[3%]"
+        style={{ zIndex: 3 }}
       >
         <div className="hud-label" style={{
           background: 'rgba(255,255,255,0.8)',
