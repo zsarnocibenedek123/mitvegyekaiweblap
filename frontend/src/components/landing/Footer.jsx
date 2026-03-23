@@ -1,7 +1,9 @@
 import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
-import { Sparkles, ArrowRight, Github, Twitter, Linkedin, Mail } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Sparkles, Github, Twitter, Linkedin, Mail, Send, User, MapPin, Globe, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
 const techBadges = [
@@ -31,10 +33,30 @@ const footerLinks = [
 export const Footer = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const [formState, setFormState] = useState({ name: '', email: '', address: '', website: '' });
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL;
+      await fetch(`${backendUrl}/api/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formState),
+      });
+    } catch (err) {
+      // silently handle
+    }
+    setSubmitting(false);
+    setSubmitted(true);
+  };
 
   return (
     <footer data-testid="footer-section">
-      {/* CTA Section */}
+      {/* CTA Section with Form */}
       <section className="py-24 md:py-32" data-testid="footer-cta">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <motion.div
@@ -50,17 +72,104 @@ export const Footer = () => {
             <p className="mt-6 text-base md:text-lg text-slate-600 max-w-xl mx-auto leading-relaxed">
               Csatlakozzon azokhoz a webshopokhoz, amelyek már AI-val hajtják a konverzióikat.
             </p>
-            <div className="mt-10 flex flex-wrap justify-center gap-4">
-              <Button
-                variant="outline"
-                size="lg"
-                className="rounded-full border-slate-300 text-slate-700 hover:border-[#0052CC] hover:text-[#0052CC] px-10 h-13 text-base font-semibold transition-colors duration-200"
-                data-testid="footer-contact-button"
+          </motion.div>
+
+          {/* Contact Form */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-12 max-w-md mx-auto"
+          >
+            {submitted ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white border border-green-200 rounded-2xl p-8 text-center shadow-sm"
+                data-testid="contact-success"
               >
-                <Mail className="mr-2 w-4 h-4" />
-                Lépj kapcsolatba velünk
-              </Button>
-            </div>
+                <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                </div>
+                <h3 className="text-lg font-bold text-[#0A1128]">Köszönjük!</h3>
+                <p className="text-sm text-slate-600 mt-2">Hamarosan felvesszük Önnel a kapcsolatot.</p>
+              </motion.div>
+            ) : (
+              <form
+                onSubmit={handleSubmit}
+                className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm space-y-5"
+                data-testid="contact-form"
+              >
+                <div>
+                  <Label className="text-xs font-semibold text-slate-700 mb-1.5 block">Név</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      required
+                      placeholder="Kovács János"
+                      value={formState.name}
+                      onChange={(e) => setFormState(s => ({ ...s, name: e.target.value }))}
+                      className="pl-10 text-sm border-slate-200 focus:border-[#0052CC] focus:ring-[#0052CC]/20"
+                      data-testid="contact-name-input"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-slate-700 mb-1.5 block">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      required
+                      type="email"
+                      placeholder="janos@webshop.hu"
+                      value={formState.email}
+                      onChange={(e) => setFormState(s => ({ ...s, email: e.target.value }))}
+                      className="pl-10 text-sm border-slate-200 focus:border-[#0052CC] focus:ring-[#0052CC]/20"
+                      data-testid="contact-email-input"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-slate-700 mb-1.5 block">Cím</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      placeholder="Budapest, Fő utca 1."
+                      value={formState.address}
+                      onChange={(e) => setFormState(s => ({ ...s, address: e.target.value }))}
+                      className="pl-10 text-sm border-slate-200 focus:border-[#0052CC] focus:ring-[#0052CC]/20"
+                      data-testid="contact-address-input"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-slate-700 mb-1.5 block">Weboldalad linkje</Label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      placeholder="https://webshop.hu"
+                      value={formState.website}
+                      onChange={(e) => setFormState(s => ({ ...s, website: e.target.value }))}
+                      className="pl-10 text-sm border-slate-200 focus:border-[#0052CC] focus:ring-[#0052CC]/20"
+                      data-testid="contact-website-input"
+                    />
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full rounded-xl bg-[#0052CC] hover:bg-[#0043A6] text-white h-11 text-sm font-semibold transition-colors duration-200"
+                  data-testid="contact-submit-button"
+                >
+                  {submitting ? 'Küldés...' : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Küldés
+                    </>
+                  )}
+                </Button>
+              </form>
+            )}
           </motion.div>
         </div>
       </section>
