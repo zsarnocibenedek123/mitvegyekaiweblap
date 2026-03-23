@@ -16,7 +16,6 @@ export const Navbar = () => {
   const links = [
     { label: 'Funkciók', href: '#pipeline' },
     { label: 'Widget Demó', href: '#widget-demo' },
-    { label: 'API Dokumentáció', href: '#developer' },
     { label: 'Analitika', href: '#analytics' },
   ];
 
@@ -51,14 +50,8 @@ export const Navbar = () => {
             </a>
           ))}
           <a href="#admin" data-testid="nav-admin-button">
-            <Button variant="outline" size="sm" className="rounded-full border-slate-300 text-slate-700 hover:border-[#0052CC] hover:text-[#0052CC] transition-colors duration-200">
-              Admin Belépés
-            </Button>
           </a>
           <a href="#widget-demo" data-testid="nav-cta-button">
-            <Button size="sm" className="rounded-full bg-[#0052CC] hover:bg-[#0043A6] text-white transition-colors duration-200">
-              Kezdés ingyen
-            </Button>
           </a>
         </div>
 

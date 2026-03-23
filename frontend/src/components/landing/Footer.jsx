@@ -23,10 +23,6 @@ const footerLinks = [
     links: ['API Dokumentáció', 'SDK', 'Státusz oldal', 'Postman gyűjtemény'],
   },
   {
-    title: 'Cég',
-    links: ['Rólunk', 'Blog', 'Karrier', 'Kapcsolat'],
-  },
-  {
     title: 'Jogi',
     links: ['Adatkezelés', 'ÁSZF', 'Cookie szabályzat', 'GDPR'],
   },
@@ -79,28 +75,10 @@ export const Footer = () => {
 
       {/* Tech Badges */}
       <div className="max-w-7xl mx-auto px-6 md:px-12 pb-12">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="flex flex-wrap justify-center gap-3 mb-12"
-          data-testid="tech-badges"
-        >
-          {techBadges.map((badge) => (
-            <div
-              key={badge.label}
-              className="tech-badge rounded-full px-4 py-2 text-xs font-bold flex items-center gap-2"
-            >
-              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: badge.color }} />
-              {badge.label}
-            </div>
-          ))}
-        </motion.div>
-
         <Separator className="mb-12" />
 
         {/* Footer links */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-12">
           {footerLinks.map((group) => (
             <div key={group.title}>
               <h4 className="text-sm font-bold text-[#0A1128] mb-4">{group.title}</h4>

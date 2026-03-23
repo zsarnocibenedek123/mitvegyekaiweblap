@@ -51,7 +51,7 @@ export const Hero = ({ onDemoClick }) => {
               data-testid="hero-headline"
             >
               Váltsd eladássá a keresést egy{' '}
-              <span className="text-[#0052CC]">AI-val</span>, amely valóban érti a vásárlót.
+              <span className="text-[#0052CC]">AI-al</span>, amely valóban érti a vásárlót.
             </motion.h1>
 
             <motion.p
@@ -79,16 +79,6 @@ export const Hero = ({ onDemoClick }) => {
                 Widget Demó indítása
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
               </Button>
-              <a href="#developer">
-                <Button
-                  data-testid="hero-cta-api"
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full border-slate-300 text-slate-700 hover:border-[#0052CC] hover:text-[#0052CC] px-8 h-12 text-base font-semibold transition-colors duration-200"
-                >
-                  API Dokumentáció
-                </Button>
-              </a>
             </motion.div>
 
             {/* Trust indicators */}
