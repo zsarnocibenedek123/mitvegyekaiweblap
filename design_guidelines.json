@@ -1,0 +1,149 @@
+{
+  "theme": "light",
+  "typography": {
+    "headings": "Manrope",
+    "body": "IBM Plex Sans",
+    "rules": {
+      "headings": "tracking-tight text-[#0A1128] font-extrabold",
+      "body": "leading-relaxed text-slate-600",
+      "labels": "uppercase tracking-[0.2em] text-xs font-bold text-[#0052CC]"
+    }
+  },
+  "colors": {
+    "background": {
+      "primary": "#FFFFFF",
+      "secondary": "#F8FAFC",
+      "glass": "rgba(255, 255, 255, 0.7)"
+    },
+    "text": {
+      "primary": "#0A1128",
+      "secondary": "#475569",
+      "accent": "#0052CC"
+    },
+    "brand": {
+      "primary": "#0052CC",
+      "hover": "#0043A6",
+      "light": "#E0EFFF",
+      "border": "#E2E8F0"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "bg-white/70 backdrop-blur-xl border border-white/40 shadow-sm backdrop-saturate-150",
+    "cards": "bg-white border border-slate-200 shadow-sm rounded-2xl hover:-translate-y-1 hover:shadow-lg transition-all duration-300",
+    "dev_card": "bg-[#0A1128] border border-blue-900 shadow-2xl rounded-2xl text-blue-100",
+    "gradients": "bg-gradient-to-br from-blue-50 to-white"
+  },
+  "layouts": {
+    "spacing": "py-24 md:py-32",
+    "container": "max-w-7xl mx-auto px-6 md:px-12",
+    "grid_bento": "grid grid-cols-1 md:grid-cols-12 gap-8"
+  },
+  "motion": {
+    "scroll": "Use framer-motion for subtle fade-up and staggered reveals on scroll.",
+    "hover": "Buttons and cards should have slight lift (-translate-y-1) and shadow expansion.",
+    "interactive": "The Widget Demo must have a Framer Motion layout transition to simulate a 'loading AI recommendations' state.",
+    "parallax": "Apply useScroll and useTransform to hero elements and dashboard preview layers to create depth."
+  },
+  "accessibility": {
+    "contrast": "Ensure #0052CC text is used against #FFFFFF or #E0EFFF. #0A1128 for main text.",
+    "motion": "Respect prefers-reduced-motion using Framer Motion's useReducedMotion hook."
+  },
+  "sections": [
+    {
+      "name": "Sticky Navbar",
+      "component": "Navbar",
+      "style": "glassmorphism",
+      "details": "Links: 'Funkciók', 'API Dokumentáció', 'Admin Belépés'. CTA: 'Kezdés ingyen' in #0052CC. Transparent background is FORBIDDEN. Must use white/70 with backdrop blur."
+    },
+    {
+      "name": "Hero Section",
+      "component": "Hero",
+      "layout": "grid grid-cols-1 lg:grid-cols-2 gap-16 items-center",
+      "content": {
+        "badge": "ÚJ GENERÁCIÓS AJÁNLÓMOTOR",
+        "headline": "Hibrid termékajánló motor, ami tényleg elad.",
+        "subheadline": "Generatív AI és determinisztikus logika ötvözete. Adjon 'Személyi Stylist' élményt webshopjában egyetlen API hívással.",
+        "ctas": ["Próbálja ki a Demót", "API Dokumentáció"]
+      },
+      "visuals": "Right side: Framer-motion driven staggered floating cards showing 'Product detected', 'AI Matching...', 'Conversion +34%'. No heavy images, pure UI/UX motion."
+    },
+    {
+      "name": "Interactive Pipeline Visualization",
+      "component": "PipelineSteps",
+      "layout": "grid grid-cols-1 md:grid-cols-4 gap-6 relative",
+      "content": "4 steps: 1. Adatgyűjtés, 2. AI Elemzés, 3. Személyre szabás, 4. Konverzió. Use connecting animated SVG lines between steps. Step cards scale up on hover."
+    },
+    {
+      "name": "Widget Demo Panel",
+      "component": "InteractiveDemo",
+      "layout": "centered container, heavy padding",
+      "content": "A mock 'Webshop' UI card. User clicks a 'Kérem az AI Stylistot' button. Show a Framer Motion loading skeleton, then reveal 3 product cards with '89% Match' badges. Background should be secondary color (#F8FAFC)."
+    },
+    {
+      "name": "Developer / API Section",
+      "component": "DeveloperAPI",
+      "layout": "grid grid-cols-1 lg:grid-cols-2 gap-12",
+      "style": "dev_card on the code side",
+      "content": "Left: 'Fejlesztőkre szabva' (Made for developers). 'Integrálja percek alatt.' Right: A mock code editor showing 'import { MitVegyek } from @mitvegyek/react;'. Use syntax highlighting colors."
+    },
+    {
+      "name": "Analytics Dashboard Preview",
+      "component": "AnalyticsPreview",
+      "layout": "full width overflow hidden",
+      "content": "A massive, gorgeous UI mockup of an analytics dashboard using Recharts. Show AreaChart for 'MRR' and BarChart for 'Konverziós ráta'. Wrap in glassmorphic window frame. Text above: 'Valós idejű ROI követés'."
+    },
+    {
+      "name": "Partner Admin Preview",
+      "component": "PartnerAdmin",
+      "layout": "Bento Grid (MODE B: High Density Grid)",
+      "content": "Grid showing 'Ügyfelek' (Clients), 'API Kvóta' (API Quota), 'Bevétel' (Revenue). Strict hierarchy, 1px borders, #0052CC accents. Text: 'Menedzselje ügyfeleit egy helyen'."
+    },
+    {
+      "name": "Footer",
+      "component": "Footer",
+      "layout": "4 columns",
+      "content": "Include Tech Badges (React, Node, AI). Links, and a final massive CTA: 'Készen áll a növekedésre?' (Ready to grow?)."
+    }
+  ],
+  "image_urls": [
+    {
+      "url": "https://images.pexels.com/photos/17485657/pexels-photo-17485657.png",
+      "category": "Hero/Abstract",
+      "description": "3D render abstract digital visualization depicting neural networks. Use sparingly as a subtle background element with low opacity."
+    },
+    {
+      "url": "https://images.pexels.com/photos/785667/pexels-photo-785667.jpeg",
+      "category": "Testimonial",
+      "description": "Confident businesswoman. Can be used as an avatar in the widget demo or a quote block."
+    }
+  ],
+  "instructions_to_main_agent": [
+    "Build a completely static frontend. No backend or database connections.",
+    "Use 'framer-motion' for all animations. Implement staggered reveals and parallax on the Dashboard preview.",
+    "The 'Widget Demo Panel' MUST be interactive: build a stateful React component that simulates an AI search when a button is clicked, using Framer Motion's AnimatePresence for the loading and result states.",
+    "Use 'lucide-react' for all icons.",
+    "Use 'recharts' to build a mock analytics chart in the Analytics Preview section.",
+    "Strictly adhere to the Light theme. Deep Blue (#0052CC) is the main accent. Use it for CTAs, active states, and highlighted text.",
+    "For the code snippet, construct a styled block (e.g., using a pre/code tag styled like a dark terminal) to contrast heavily against the white background.",
+    "All texts MUST be in Hungarian as defined in the sections.",
+    "Ensure 'lenis' or similar smooth scrolling is implemented at the root level if possible, or use CSS scroll-behavior: smooth.",
+    "Add data-testid attributes to all interactive elements."
+  ],
+  "universal_guidelines_for_main_agent": [
+    "You tend to converge toward generic, 'on distribution' outputs. In frontend design, this creates what users call the 'AI slop' aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur).",
+    "You MUST NOT apply universal transition. Eg: `transition: all`. This results in breaking transforms.",
+    "You MUST NOT center align the app container, ie do not add `.App { text-align: center; }` in the css file. This disrupts the human natural reading flow of text.",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style.",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Prioritize using pre-existing components from src/components/ui when applicable.",
+    "Components MUST use named exports (export const ComponentName = ...)",
+    "Pages MUST use default exports (export default function PageName() {...})",
+    "Use `sonner` for toasts. Sonner component are located in `/app/frontend/src/components/ui/sonner.js`"
+  ]
+}
