@@ -1,34 +1,93 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* Landing page styles for MitVegyek AI */
+
+.landing-gradient-mesh {
+  background-image:
+    radial-gradient(at 20% 20%, rgba(0, 82, 204, 0.06) 0px, transparent 50%),
+    radial-gradient(at 80% 10%, rgba(0, 82, 204, 0.04) 0px, transparent 50%),
+    radial-gradient(at 50% 80%, rgba(0, 82, 204, 0.03) 0px, transparent 50%);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+.glass-navbar {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
 }
 
-.App-link {
-    color: #61dafb;
+.code-block {
+  background: #0A1128;
+  border: 1px solid rgba(30, 58, 138, 0.5);
+  color: #93C5FD;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.pipeline-connector {
+  height: 2px;
+  background: linear-gradient(90deg, #0052CC 0%, #93C5FD 100%);
+}
+
+.floating-animation {
+  animation: floatGentle 6s ease-in-out infinite;
+}
+
+.floating-animation-delayed {
+  animation: floatGentle 6s ease-in-out infinite;
+  animation-delay: -2s;
+}
+
+.floating-animation-slow {
+  animation: floatGentle 8s ease-in-out infinite;
+  animation-delay: -4s;
+}
+
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-bg {
+  background: linear-gradient(90deg, #E0EFFF 25%, #F8FAFC 50%, #E0EFFF 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+.tech-badge {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
+.tech-badge:hover {
+  border-color: #0052CC;
+  transform: translateY(-2px);
+}
+
+/* Widget bubble animation */
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.widget-bubble {
+  animation: bounce-subtle 3s ease-in-out infinite;
 }

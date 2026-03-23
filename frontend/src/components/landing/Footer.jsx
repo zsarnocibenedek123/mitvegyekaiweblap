@@ -1,0 +1,151 @@
+import { motion, useInView } from 'framer-motion';
+import { useRef } from 'react';
+import { Sparkles, ArrowRight, Github, Twitter, Linkedin, Mail } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+
+const techBadges = [
+  { label: 'Node 20', color: '#339933' },
+  { label: 'Express 5', color: '#000000' },
+  { label: 'TypeScript', color: '#3178C6' },
+  { label: 'OpenAI', color: '#412991' },
+  { label: 'Vector Search', color: '#0052CC' },
+  { label: 'React', color: '#61DAFB' },
+];
+
+const footerLinks = [
+  {
+    title: 'Termék',
+    links: ['Funkciók', 'Árazás', 'Changelog', 'Roadmap'],
+  },
+  {
+    title: 'Fejlesztők',
+    links: ['API Dokumentáció', 'SDK', 'Státusz oldal', 'Postman gyűjtemény'],
+  },
+  {
+    title: 'Cég',
+    links: ['Rólunk', 'Blog', 'Karrier', 'Kapcsolat'],
+  },
+  {
+    title: 'Jogi',
+    links: ['Adatkezelés', 'ÁSZF', 'Cookie szabályzat', 'GDPR'],
+  },
+];
+
+export const Footer = () => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
+
+  return (
+    <footer data-testid="footer-section">
+      {/* CTA Section */}
+      <section className="py-24 md:py-32" data-testid="footer-cta">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <motion.div
+            ref={ref}
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7 }}
+            className="text-center"
+          >
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#0A1128] leading-tight">
+              Készen áll a növekedésre?
+            </h2>
+            <p className="mt-6 text-base md:text-lg text-slate-600 max-w-xl mx-auto leading-relaxed">
+              Csatlakozzon azokhoz a webshopokhoz, amelyek már AI-val hajtják a konverzióikat.
+            </p>
+            <div className="mt-10 flex flex-wrap justify-center gap-4">
+              <Button
+                size="lg"
+                className="rounded-full bg-[#0052CC] hover:bg-[#0043A6] text-white px-10 h-13 text-base font-semibold group transition-colors duration-200"
+                data-testid="footer-cta-button"
+              >
+                Próbálja ki ingyen
+                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="rounded-full border-slate-300 text-slate-700 hover:border-[#0052CC] hover:text-[#0052CC] px-10 h-13 text-base font-semibold transition-colors duration-200"
+                data-testid="footer-contact-button"
+              >
+                <Mail className="mr-2 w-4 h-4" />
+                Beszéljünk
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Tech Badges */}
+      <div className="max-w-7xl mx-auto px-6 md:px-12 pb-12">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="flex flex-wrap justify-center gap-3 mb-12"
+          data-testid="tech-badges"
+        >
+          {techBadges.map((badge) => (
+            <div
+              key={badge.label}
+              className="tech-badge rounded-full px-4 py-2 text-xs font-bold flex items-center gap-2"
+            >
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: badge.color }} />
+              {badge.label}
+            </div>
+          ))}
+        </motion.div>
+
+        <Separator className="mb-12" />
+
+        {/* Footer links */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+          {footerLinks.map((group) => (
+            <div key={group.title}>
+              <h4 className="text-sm font-bold text-[#0A1128] mb-4">{group.title}</h4>
+              <ul className="space-y-2.5">
+                {group.links.map((link) => (
+                  <li key={link}>
+                    <a href="#" className="text-sm text-slate-500 hover:text-[#0052CC] transition-colors duration-200">
+                      {link}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <Separator className="mb-8" />
+
+        {/* Bottom */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-[#0052CC] flex items-center justify-center">
+              <Sparkles className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="font-extrabold text-sm tracking-tight text-[#0A1128]">
+              MitVegyek<span className="text-[#0052CC]">AI</span>
+            </span>
+          </div>
+          <p className="text-xs text-slate-500">
+            &copy; {new Date().getFullYear()} MitVegyek AI. Minden jog fenntartva.
+          </p>
+          <div className="flex items-center gap-3">
+            {[Github, Twitter, Linkedin].map((Icon, i) => (
+              <a
+                key={i}
+                href="#"
+                className="w-8 h-8 rounded-full bg-[#F8FAFC] border border-slate-200 flex items-center justify-center text-slate-400 hover:text-[#0052CC] hover:border-[#0052CC] transition-colors duration-200"
+                data-testid={`social-link-${i}`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
