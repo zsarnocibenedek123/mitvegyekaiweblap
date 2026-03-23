@@ -4,11 +4,10 @@ import { motion } from 'framer-motion';
 export const HeroVisual3D = () => {
   const canvasRef = useRef(null);
   const frameRef = useRef(null);
-  const timeRef = useRef(0);
   const [hudVisible, setHudVisible] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setHudVisible(true), 600);
+    const t = setTimeout(() => setHudVisible(true), 800);
     return () => clearTimeout(t);
   }, []);
 
@@ -17,236 +16,301 @@ export const HeroVisual3D = () => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 2;
-    const W = 540;
-    const H = 480;
+    const W = 520;
+    const H = 520;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     canvas.style.width = '100%';
     canvas.style.height = '100%';
     ctx.scale(dpr, dpr);
 
-    // Card definitions (4 glass panels, funnel: big->small)
-    const cards = [
-      { x: 70, y: 40, w: 340, h: 380, opacity: 0.35, label: 'Teljes katalógus', dots: 120, dotOrder: 0 },
-      { x: 115, y: 70, w: 290, h: 330, opacity: 0.45, label: 'Szemantikus szűrés', dots: 55, dotOrder: 1 },
-      { x: 155, y: 100, w: 240, h: 280, opacity: 0.55, label: 'Relevancia rangsor', dots: 18, dotOrder: 2 },
-      { x: 190, y: 130, w: 195, h: 230, opacity: 0.85, label: 'Tökéletes találat', dots: 1, dotOrder: 3 },
-    ];
+    const cx = W / 2;
+    const cy = H / 2;
+    const R = 160; // sphere radius
 
-    // Pre-generate dot positions for each card (seeded)
-    const cardDots = cards.map((card, ci) => {
-      const dots = [];
-      const seed = ci * 1000;
-      for (let i = 0; i < card.dots; i++) {
-        const px = pseudoRandom(seed + i * 3) * (card.w - 24) + 12;
-        const py = pseudoRandom(seed + i * 3 + 1) * (card.h - 40) + 28;
-        const size = 1.5 + pseudoRandom(seed + i * 3 + 2) * 2;
-        dots.push({ px, py, size, phase: pseudoRandom(seed + i * 7) * Math.PI * 2 });
-      }
-      return dots;
-    });
-
-    function pseudoRandom(seed) {
-      let x = Math.sin(seed * 9301 + 49297) * 49297;
-      return x - Math.floor(x);
-    }
-
-    // Particles flowing between cards
-    const particles = [];
-    for (let i = 0; i < 20; i++) {
-      particles.push({
-        fromCard: Math.floor(i / 7),
-        t: Math.random(),
-        speed: 0.004 + Math.random() * 0.006,
-        x: 0, y: 0,
-        size: 1 + Math.random() * 1.5,
-        opacity: 0.3 + Math.random() * 0.4,
+    // Product vector points inside the sphere (3D coords)
+    const products = [];
+    for (let i = 0; i < 40; i++) {
+      // Random points inside sphere
+      let x, y, z;
+      do {
+        x = (Math.random() - 0.5) * 2;
+        y = (Math.random() - 0.5) * 2;
+        z = (Math.random() - 0.5) * 2;
+      } while (x * x + y * y + z * z > 1);
+      products.push({
+        x: x * R * 0.85,
+        y: y * R * 0.85,
+        z: z * R * 0.85,
+        size: 2 + Math.random() * 2.5,
+        brightness: 0.2 + Math.random() * 0.3,
       });
     }
 
+    // Needle state
+    const needle = {
+      targetIdx: 0,
+      currentAngleXY: 0,
+      currentAngleXZ: 0,
+      targetAngleXY: 0,
+      targetAngleXZ: 0,
+      phase: 'searching', // searching | locking | locked
+      lockTimer: 0,
+      searchSpeed: 0,
+      highlightIntensity: 0,
+    };
+
+    // Pick first target
+    needle.targetIdx = Math.floor(Math.random() * products.length);
+    needle.phase = 'searching';
+    needle.searchSpeed = 3;
+
+    function project(x3, y3, z3, rotY, rotX) {
+      // Rotate around Y axis
+      let x = x3 * Math.cos(rotY) - z3 * Math.sin(rotY);
+      let z = x3 * Math.sin(rotY) + z3 * Math.cos(rotY);
+      let y = y3;
+      // Rotate around X axis
+      const y2 = y * Math.cos(rotX) - z * Math.sin(rotX);
+      const z2 = y * Math.sin(rotX) + z * Math.cos(rotX);
+      // Simple perspective
+      const scale = 600 / (600 + z2);
+      return {
+        x: cx + x * scale,
+        y: cy + y2 * scale,
+        z: z2,
+        scale,
+      };
+    }
+
+    let time = 0;
+
     const draw = () => {
-      timeRef.current += 0.016;
-      const t = timeRef.current;
+      time += 0.016;
       ctx.clearRect(0, 0, W, H);
 
-      // Draw each card
-      cards.forEach((card, ci) => {
-        const floatY = Math.sin(t * 0.8 + ci * 0.7) * 4;
-        const cx = card.x;
-        const cy = card.y + floatY;
+      const rotY = time * 0.15;
+      const rotX = 0.2;
 
-        // Card shadow
-        ctx.fillStyle = `rgba(0, 40, 120, ${0.03 + ci * 0.01})`;
-        ctx.beginPath();
-        roundRect(ctx, cx + 4, cy + 6, card.w, card.h, 16);
-        ctx.fill();
+      // ── SPHERE SHELL ──
+      // Outer glow
+      const outerGlow = ctx.createRadialGradient(cx, cy, R * 0.9, cx, cy, R * 1.3);
+      outerGlow.addColorStop(0, 'rgba(0, 82, 204, 0.04)');
+      outerGlow.addColorStop(1, 'rgba(0, 82, 204, 0)');
+      ctx.fillStyle = outerGlow;
+      ctx.fillRect(0, 0, W, H);
 
-        // Glass card background
-        ctx.fillStyle = `rgba(255, 255, 255, ${card.opacity})`;
-        ctx.beginPath();
-        roundRect(ctx, cx, cy, card.w, card.h, 16);
-        ctx.fill();
+      // Frosted glass sphere
+      const sphereGrad = ctx.createRadialGradient(cx - R * 0.3, cy - R * 0.3, 0, cx, cy, R);
+      sphereGrad.addColorStop(0, 'rgba(240, 245, 255, 0.6)');
+      sphereGrad.addColorStop(0.5, 'rgba(230, 238, 250, 0.35)');
+      sphereGrad.addColorStop(0.85, 'rgba(210, 225, 248, 0.2)');
+      sphereGrad.addColorStop(1, 'rgba(200, 218, 245, 0.08)');
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.fillStyle = sphereGrad;
+      ctx.fill();
 
-        // Glass border
-        ctx.strokeStyle = ci === 3
-          ? 'rgba(0, 82, 204, 0.35)'
-          : `rgba(0, 82, 204, ${0.06 + ci * 0.04})`;
-        ctx.lineWidth = ci === 3 ? 1.5 : 0.8;
+      // Sphere border
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(0, 82, 204, 0.12)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      // Latitude/longitude wireframe lines
+      ctx.strokeStyle = 'rgba(0, 82, 204, 0.04)';
+      ctx.lineWidth = 0.5;
+      for (let lat = -2; lat <= 2; lat++) {
+        const angle = (lat / 3) * Math.PI;
+        const r = Math.cos(angle) * R;
+        const yOff = Math.sin(angle) * R;
         ctx.beginPath();
-        roundRect(ctx, cx, cy, card.w, card.h, 16);
+        ctx.ellipse(cx, cy + yOff * Math.cos(rotX), Math.max(1, r), Math.max(1, Math.abs(r * 0.3)), 0, 0, Math.PI * 2);
         ctx.stroke();
+      }
 
-        // Card label at top
-        ctx.fillStyle = ci === 3 ? 'rgba(0, 82, 204, 0.8)' : 'rgba(100, 116, 139, 0.5)';
-        ctx.font = `${ci === 3 ? '600' : '500'} 10px 'JetBrains Mono', monospace`;
-        ctx.textAlign = 'left';
-        ctx.fillText(card.label.toUpperCase(), cx + 14, cy + 18);
+      // ── PRODUCT POINTS (inside sphere) ──
+      const projectedProducts = products.map((p, i) => {
+        const pr = project(p.x, p.y, p.z, rotY, rotX);
+        return { ...pr, idx: i, size: p.size * pr.scale, brightness: p.brightness };
+      });
 
-        // Draw dots
-        const dots = cardDots[ci];
-        dots.forEach((dot, di) => {
-          const dx = cx + dot.px;
-          const dy = cy + dot.py;
+      // Sort by z for depth ordering
+      projectedProducts.sort((a, b) => a.z - b.z);
 
-          if (ci === 3) {
-            // Final card: single glowing blue product
-            const pulse = Math.sin(t * 2) * 0.15 + 0.85;
+      // ── NEEDLE LOGIC ──
+      const target = products[needle.targetIdx];
+      const targetProj = project(target.x, target.y, target.z, rotY, rotX);
 
-            // Outer glow
-            ctx.beginPath();
-            ctx.arc(cx + card.w / 2, cy + card.h / 2 + 10, 28, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(0, 82, 204, ${0.08 * pulse})`;
-            ctx.fill();
+      if (needle.phase === 'searching') {
+        // Needle spins and searches
+        needle.currentAngleXY += needle.searchSpeed * 0.016;
+        needle.searchSpeed *= 0.992; // slow down
 
-            ctx.beginPath();
-            ctx.arc(cx + card.w / 2, cy + card.h / 2 + 10, 18, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(0, 82, 204, ${0.15 * pulse})`;
-            ctx.fill();
+        // Calculate target angle
+        const dx = targetProj.x - cx;
+        const dy = targetProj.y - cy;
+        needle.targetAngleXY = Math.atan2(dy, dx);
 
-            // Product silhouette (rounded rect)
-            const px = cx + card.w / 2 - 20;
-            const py2 = cy + card.h / 2 - 12;
-            ctx.fillStyle = `rgba(0, 82, 204, ${0.18 * pulse})`;
-            ctx.beginPath();
-            roundRect(ctx, px, py2, 40, 48, 8);
-            ctx.fill();
-            ctx.strokeStyle = `rgba(0, 82, 204, ${0.5 * pulse})`;
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            roundRect(ctx, px, py2, 40, 48, 8);
-            ctx.stroke();
+        // When search speed is low enough, start locking
+        if (needle.searchSpeed < 0.8) {
+          needle.phase = 'locking';
+        }
+      } else if (needle.phase === 'locking') {
+        // Smoothly lerp to target
+        const dx = targetProj.x - cx;
+        const dy = targetProj.y - cy;
+        needle.targetAngleXY = Math.atan2(dy, dx);
 
-            // Checkmark
-            ctx.save();
-            ctx.strokeStyle = `rgba(0, 82, 204, ${0.9 * pulse})`;
-            ctx.lineWidth = 2.5;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.beginPath();
-            ctx.moveTo(cx + card.w / 2 - 7, cy + card.h / 2 + 12);
-            ctx.lineTo(cx + card.w / 2 - 1, cy + card.h / 2 + 18);
-            ctx.lineTo(cx + card.w / 2 + 9, cy + card.h / 2 + 4);
-            ctx.stroke();
-            ctx.restore();
-          } else {
-            // Other cards: scattered dots
-            const wobble = Math.sin(t * 1.2 + dot.phase) * (ci === 0 ? 3 : ci === 1 ? 1.5 : 0.5);
-            const dotAlpha = ci === 0 ? 0.15 : ci === 1 ? 0.25 : 0.4;
-            const dotColor = ci === 2 ? `rgba(0, 82, 204, ${dotAlpha})` : `rgba(148, 163, 184, ${dotAlpha})`;
+        let diff = needle.targetAngleXY - needle.currentAngleXY;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        needle.currentAngleXY += diff * 0.06;
 
-            ctx.beginPath();
-            ctx.arc(dx + wobble, dy + wobble * 0.5, dot.size, 0, Math.PI * 2);
-            ctx.fillStyle = dotColor;
-            ctx.fill();
-          }
-        });
+        needle.highlightIntensity = Math.min(1, needle.highlightIntensity + 0.015);
 
-        // Step number badge
-        if (ci < 3) {
-          const badgeX = cx + card.w - 28;
-          const badgeY = cy + 10;
-          ctx.fillStyle = 'rgba(0, 82, 204, 0.06)';
+        if (Math.abs(diff) < 0.05) {
+          needle.phase = 'locked';
+          needle.lockTimer = 0;
+        }
+      } else if (needle.phase === 'locked') {
+        // Stay locked, track target
+        const dx = targetProj.x - cx;
+        const dy = targetProj.y - cy;
+        needle.targetAngleXY = Math.atan2(dy, dx);
+        needle.currentAngleXY = needle.targetAngleXY;
+
+        needle.lockTimer += 0.016;
+        needle.highlightIntensity = 0.7 + Math.sin(time * 3) * 0.3;
+
+        // After some time, pick new target
+        if (needle.lockTimer > 3.5) {
+          needle.targetIdx = (needle.targetIdx + 1 + Math.floor(Math.random() * (products.length - 1))) % products.length;
+          needle.phase = 'searching';
+          needle.searchSpeed = 2.5 + Math.random() * 2;
+          needle.highlightIntensity = 0;
+          needle.lockTimer = 0;
+        }
+      }
+
+      // ── DRAW PRODUCT DOTS ──
+      projectedProducts.forEach((p) => {
+        const isTarget = p.idx === needle.targetIdx;
+        const depthFade = 0.3 + ((p.z + R) / (2 * R)) * 0.7;
+
+        if (isTarget && needle.highlightIntensity > 0) {
+          // Highlighted target
+          const hi = needle.highlightIntensity;
+
+          // Outer glow
           ctx.beginPath();
-          ctx.arc(badgeX, badgeY, 10, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, p.size * 5 * hi, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 82, 204, ${0.06 * hi})`;
           ctx.fill();
-          ctx.fillStyle = 'rgba(0, 82, 204, 0.35)';
-          ctx.font = "bold 9px 'JetBrains Mono', monospace";
-          ctx.textAlign = 'center';
-          ctx.fillText(`${ci + 1}`, badgeX, badgeY + 3);
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * 3 * hi, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 82, 204, ${0.12 * hi})`;
+          ctx.fill();
+
+          // Core
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * 1.3, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 82, 204, ${0.9 * hi})`;
+          ctx.fill();
+
+          // Ring
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * 2.5 * hi, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(0, 82, 204, ${0.35 * hi})`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        } else {
+          // Normal dot
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * 0.8, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(100, 130, 180, ${p.brightness * depthFade})`;
+          ctx.fill();
         }
       });
 
-      // Animate particles flowing between cards (funnel effect)
-      particles.forEach(p => {
-        p.t += p.speed;
-        if (p.t > 1) { p.t = 0; p.fromCard = (p.fromCard + 1) % 3; }
+      // ── DRAW NEEDLE ──
+      const needleLen = R * 0.82;
+      const angle = needle.currentAngleXY;
+      const nx1 = cx + Math.cos(angle) * needleLen;
+      const ny1 = cy + Math.sin(angle) * needleLen;
+      const nx2 = cx - Math.cos(angle) * needleLen * 0.2;
+      const ny2 = cy - Math.sin(angle) * needleLen * 0.2;
 
-        const fromCard = cards[p.fromCard];
-        const toCard = cards[p.fromCard + 1];
-        if (!toCard) return;
+      // Needle glow
+      ctx.save();
+      ctx.shadowColor = '#0052CC';
+      ctx.shadowBlur = 10;
 
-        const floatFrom = Math.sin(t * 0.8 + p.fromCard * 0.7) * 4;
-        const floatTo = Math.sin(t * 0.8 + (p.fromCard + 1) * 0.7) * 4;
+      // Needle body (front - blue)
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(nx1, ny1);
+      ctx.strokeStyle = 'rgba(0, 82, 204, 0.7)';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.stroke();
 
-        const x1 = fromCard.x + fromCard.w / 2;
-        const y1 = fromCard.y + floatFrom + fromCard.h * 0.7;
-        const x2 = toCard.x + toCard.w / 2;
-        const y2 = toCard.y + floatTo + toCard.h * 0.3;
+      // Needle body (back - faded)
+      ctx.shadowBlur = 0;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(nx2, ny2);
+      ctx.strokeStyle = 'rgba(0, 82, 204, 0.2)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
 
-        p.x = x1 + (x2 - x1) * p.t;
-        p.y = y1 + (y2 - y1) * p.t + Math.sin(p.t * Math.PI) * -15;
+      // Needle tip glow
+      ctx.beginPath();
+      ctx.arc(nx1, ny1, 4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 82, 204, 0.6)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(nx1, ny1, 8, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 82, 204, 0.1)';
+      ctx.fill();
 
+      // Center pivot
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 82, 204, 0.15)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 82, 204, 0.5)';
+      ctx.fill();
+
+      // ── Light beam from needle to target when locked ──
+      if (needle.phase === 'locked' || (needle.phase === 'locking' && needle.highlightIntensity > 0.3)) {
+        const beamAlpha = needle.highlightIntensity * 0.15;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 82, 204, ${p.opacity * (1 - p.t * 0.5)})`;
-        ctx.fill();
-
-        // Trail
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 82, 204, ${p.opacity * 0.08})`;
-        ctx.fill();
-      });
-
-      // Funnel arrows between cards
-      for (let i = 0; i < 3; i++) {
-        const from = cards[i];
-        const to = cards[i + 1];
-        const floatF = Math.sin(t * 0.8 + i * 0.7) * 4;
-        const floatT = Math.sin(t * 0.8 + (i + 1) * 0.7) * 4;
-        const ax = (from.x + from.w / 2 + to.x + to.w / 2) / 2;
-        const ay = from.y + floatF + from.h + ((to.y + floatT - (from.y + floatF + from.h)) / 2);
-
-        // Small downward arrow
-        ctx.save();
-        ctx.strokeStyle = 'rgba(0, 82, 204, 0.15)';
-        ctx.lineWidth = 1.2;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(ax, ay - 4);
-        ctx.lineTo(ax, ay + 4);
-        ctx.moveTo(ax - 3, ay + 1);
-        ctx.lineTo(ax, ay + 4);
-        ctx.lineTo(ax + 3, ay + 1);
+        ctx.moveTo(nx1, ny1);
+        ctx.lineTo(targetProj.x, targetProj.y);
+        ctx.strokeStyle = `rgba(0, 82, 204, ${beamAlpha})`;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
         ctx.stroke();
-        ctx.restore();
+        ctx.setLineDash([]);
       }
+
+      // ── Top specular highlight on sphere ──
+      const specGrad = ctx.createRadialGradient(cx - R * 0.25, cy - R * 0.35, 0, cx - R * 0.25, cy - R * 0.35, R * 0.5);
+      specGrad.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
+      specGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.fillStyle = specGrad;
+      ctx.fill();
 
       frameRef.current = requestAnimationFrame(draw);
     };
-
-    function roundRect(ctx2, x, y, w, h, r) {
-      ctx2.moveTo(x + r, y);
-      ctx2.lineTo(x + w - r, y);
-      ctx2.quadraticCurveTo(x + w, y, x + w, y + r);
-      ctx2.lineTo(x + w, y + h - r);
-      ctx2.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      ctx2.lineTo(x + r, y + h);
-      ctx2.quadraticCurveTo(x, y + h, x, y + h - r);
-      ctx2.lineTo(x, y + r);
-      ctx2.quadraticCurveTo(x, y, x + r, y);
-      ctx2.closePath();
-    }
 
     draw();
     return () => {
@@ -260,69 +324,80 @@ export const HeroVisual3D = () => {
 
       {/* HUD Labels */}
       <motion.div
-        initial={{ opacity: 0, x: -10 }}
-        animate={hudVisible ? { opacity: 1, x: 0 } : {}}
-        transition={{ duration: 0.4, delay: 0.8 }}
-        className="absolute top-[6%] left-[4%]"
+        initial={{ opacity: 0, y: -8 }}
+        animate={hudVisible ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.5, delay: 0.5 }}
+        className="absolute top-[3%] left-[50%] -translate-x-1/2"
         style={{ zIndex: 3 }}
-        data-testid="hud-catalog-label"
-      >
-        <div className="hud-label" style={{ background: 'rgba(255,255,255,0.85)', border: '1px solid rgba(148,163,184,0.2)', color: '#64748B', fontSize: '9px' }}>
-          12,847 TERMÉK
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, x: 10 }}
-        animate={hudVisible ? { opacity: 1, x: 0 } : {}}
-        transition={{ duration: 0.4, delay: 1.2 }}
-        className="absolute top-[18%] right-[2%]"
-        style={{ zIndex: 3 }}
-        data-testid="hud-semantic-label"
+        data-testid="hud-query-vector"
       >
         <div className="hud-label hud-label-analyzing">
           <span className="hud-dot hud-dot-blue" />
-          SZEMANTIKUS SZŰRÉS
+          QUERY VEKTOR KERESÉS
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, x: -10 }}
+        animate={hudVisible ? { opacity: 1, x: 0 } : {}}
+        transition={{ duration: 0.5, delay: 1.0 }}
+        className="absolute top-[28%] left-[1%]"
+        style={{ zIndex: 3 }}
+        data-testid="hud-embedding"
+      >
+        <div className="hud-label" style={{
+          background: 'rgba(255,255,255,0.85)',
+          border: '1px solid rgba(0,82,204,0.12)',
+          color: '#64748B',
+          fontSize: '9px',
+        }}>
+          EMBEDDING TÉR: 768D
         </div>
       </motion.div>
 
       <motion.div
         initial={{ opacity: 0, x: 10 }}
         animate={hudVisible ? { opacity: 1, x: 0 } : {}}
-        transition={{ duration: 0.4, delay: 1.6 }}
-        className="absolute top-[42%] right-[0%]"
+        transition={{ duration: 0.5, delay: 1.4 }}
+        className="absolute top-[20%] right-[2%]"
         style={{ zIndex: 3 }}
-        data-testid="hud-ranking-label"
+        data-testid="hud-products"
+      >
+        <div className="hud-label" style={{
+          background: 'rgba(255,255,255,0.85)',
+          border: '1px solid rgba(148,163,184,0.2)',
+          color: '#64748B',
+          fontSize: '9px',
+        }}>
+          40 TERMÉKVEKTOR
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, x: 10 }}
+        animate={hudVisible ? { opacity: 1, x: 0 } : {}}
+        transition={{ duration: 0.5, delay: 1.8 }}
+        className="absolute bottom-[22%] right-[5%]"
+        style={{ zIndex: 3 }}
+        data-testid="hud-cosine"
       >
         <div className="hud-label hud-label-recognized">
           <span className="hud-dot hud-dot-green" />
-          RELEVANCIA RANGSOROLVA
+          COSINE SIMILARITY
         </div>
       </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={hudVisible ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.4, delay: 2.0 }}
-        className="absolute bottom-[14%] left-[28%]"
+        transition={{ duration: 0.5, delay: 2.2 }}
+        className="absolute bottom-[6%] left-[50%] -translate-x-1/2"
         style={{ zIndex: 3 }}
-        data-testid="hud-match-label"
+        data-testid="hud-match"
       >
         <div className="hud-label hud-label-match">
           <span className="hud-dot hud-dot-green" />
-          TÖKÉLETES TALÁLAT: 99.8%
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={hudVisible ? { opacity: 1 } : {}}
-        transition={{ duration: 0.4, delay: 2.4 }}
-        className="absolute top-[4%] right-[15%]"
-        style={{ zIndex: 3 }}
-      >
-        <div className="hud-label" style={{ background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(0,82,204,0.1)', color: '#94A3B8', fontSize: '9px' }}>
-          EMBEDDING: 768D
+          LEGKÖZELEBBI VEKTOR MEGTALÁLVA
         </div>
       </motion.div>
     </div>
