@@ -1,6 +1,6 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef, useState } from 'react';
-import { Sparkles, Github, Twitter, Linkedin, Mail, Send, User, MapPin, Globe, CheckCircle } from 'lucide-react';
+import { Sparkles, Github, Twitter, Linkedin, Mail, Send, User, MessageSquare, Globe, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,7 +33,7 @@ const footerLinks = [
 export const Footer = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
-  const [formState, setFormState] = useState({ name: '', email: '', address: '', website: '' });
+  const [formState, setFormState] = useState({ name: '', email: '', website: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -130,19 +130,6 @@ export const Footer = () => {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-xs font-semibold text-slate-700 mb-1.5 block">Cím</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                      placeholder="Budapest, Fő utca 1."
-                      value={formState.address}
-                      onChange={(e) => setFormState(s => ({ ...s, address: e.target.value }))}
-                      className="pl-10 text-sm border-slate-200 focus:border-[#0052CC] focus:ring-[#0052CC]/20"
-                      data-testid="contact-address-input"
-                    />
-                  </div>
-                </div>
-                <div>
                   <Label className="text-xs font-semibold text-slate-700 mb-1.5 block">Weboldalad linkje</Label>
                   <div className="relative">
                     <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -152,6 +139,20 @@ export const Footer = () => {
                       onChange={(e) => setFormState(s => ({ ...s, website: e.target.value }))}
                       className="pl-10 text-sm border-slate-200 focus:border-[#0052CC] focus:ring-[#0052CC]/20"
                       data-testid="contact-website-input"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-slate-700 mb-1.5 block">Üzenet</Label>
+                  <div className="relative">
+                    <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                    <textarea
+                      placeholder="Írd le, miben segíthetünk..."
+                      value={formState.message}
+                      onChange={(e) => setFormState(s => ({ ...s, message: e.target.value }))}
+                      rows={3}
+                      className="w-full pl-10 pr-3 py-2 text-sm border border-slate-200 rounded-md focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC]/20 focus:outline-none resize-none"
+                      data-testid="contact-message-input"
                     />
                   </div>
                 </div>
