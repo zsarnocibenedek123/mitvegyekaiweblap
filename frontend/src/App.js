@@ -6,7 +6,7 @@ import { Pipeline } from "./components/landing/Pipeline";
 import { WidgetDemo } from "./components/landing/WidgetDemo";
 import { DeveloperAPI } from "./components/landing/DeveloperAPI";
 import { AnalyticsPreview } from "./components/landing/AnalyticsPreview";
-import { PartnerAdmin } from "./components/landing/PartnerAdmin";
+// PartnerAdmin removed
 import { Footer } from "./components/landing/Footer";
 
 function App() {
@@ -27,7 +27,6 @@ function App() {
       <WidgetDemo ref={widgetRef} />
       <DeveloperAPI />
       <AnalyticsPreview />
-      <PartnerAdmin />
       <Footer />
     </div>
   );
