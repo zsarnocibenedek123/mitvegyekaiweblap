@@ -15,16 +15,16 @@ const techBadges = [
 
 const footerLinks = [
   {
-    title: 'Termék',
-    links: ['Funkciók', 'Árazás', 'Changelog', 'Roadmap'],
+    title: 'Funkciók',
+    href: '#pipeline',
   },
   {
-    title: 'Fejlesztők',
-    links: ['API Dokumentáció', 'SDK', 'Státusz oldal', 'Postman gyűjtemény'],
+    title: 'Widget Demó',
+    href: '#widget-demo',
   },
   {
-    title: 'Jogi',
-    links: ['Adatkezelés', 'ÁSZF', 'Cookie szabályzat', 'GDPR'],
+    title: 'Analitika',
+    href: '#analytics',
   },
 ];
 
@@ -52,21 +52,13 @@ export const Footer = () => {
             </p>
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <Button
-                size="lg"
-                className="rounded-full bg-[#0052CC] hover:bg-[#0043A6] text-white px-10 h-13 text-base font-semibold group transition-colors duration-200"
-                data-testid="footer-cta-button"
-              >
-                Próbálja ki ingyen
-                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
-              </Button>
-              <Button
                 variant="outline"
                 size="lg"
                 className="rounded-full border-slate-300 text-slate-700 hover:border-[#0052CC] hover:text-[#0052CC] px-10 h-13 text-base font-semibold transition-colors duration-200"
                 data-testid="footer-contact-button"
               >
                 <Mail className="mr-2 w-4 h-4" />
-                Beszéljünk
+                Lépj kapcsolatba velünk
               </Button>
             </div>
           </motion.div>
@@ -77,21 +69,16 @@ export const Footer = () => {
       <div className="max-w-7xl mx-auto px-6 md:px-12 pb-12">
         <Separator className="mb-12" />
 
-        {/* Footer links */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-12">
-          {footerLinks.map((group) => (
-            <div key={group.title}>
-              <h4 className="text-sm font-bold text-[#0A1128] mb-4">{group.title}</h4>
-              <ul className="space-y-2.5">
-                {group.links.map((link) => (
-                  <li key={link}>
-                    <a href="#" className="text-sm text-slate-500 hover:text-[#0052CC] transition-colors duration-200">
-                      {link}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
+        {/* Footer nav links */}
+        <div className="flex flex-col items-center gap-3 mb-12">
+          {footerLinks.map((link) => (
+            <a
+              key={link.title}
+              href={link.href}
+              className="text-sm font-medium text-slate-500 hover:text-[#0052CC] transition-colors duration-200"
+            >
+              {link.title}
+            </a>
           ))}
         </div>
 
